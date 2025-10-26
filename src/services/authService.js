@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/auth';
 
-// Create axios instance with default config
 const axiosInstance = axios.create({
     baseURL: API_URL,
     headers: {
@@ -10,7 +9,6 @@ const axiosInstance = axios.create({
     }
 });
 
-// Add token to requests if available
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
@@ -25,13 +23,11 @@ axiosInstance.interceptors.request.use(
 );
 
 const authService = {
-    // Register
     register: async (userData) => {
         const response = await axiosInstance.post('/register', userData);
         return response.data;
     },
 
-    // Login
     login: async (credentials) => {
         const response = await axiosInstance.post('/login', credentials);
         if (response.data.accessToken) {
@@ -41,23 +37,30 @@ const authService = {
         return response.data;
     },
 
-    // Logout
-    logout: () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+    logout: async () => {
+        try {
+            await axiosInstance.post('/logout');
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+        }
     },
 
-    // Get current user
     getCurrentUser: () => {
         return localStorage.getItem('accessToken');
     },
 
-    // OAuth Google
+    getUserProfile: async () => {
+        const response = await axiosInstance.get('/user/profile');
+        return response.data;
+    },
+
     loginWithGoogle: () => {
         window.location.href = 'http://localhost:8080/oauth2/authorization/google';
     },
 
-    // OAuth GitHub
     loginWithGithub: () => {
         window.location.href = 'http://localhost:8080/oauth2/authorization/github';
     }
